@@ -1,4 +1,4 @@
-# JwtX
+# JwtX - Golang
 
 Utility functions to create and digest JSON Web Tokens.
 

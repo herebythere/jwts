@@ -8,12 +8,42 @@ import (
 
 const (
 	lazyFox     = "i can be such a lazy summer fox sometimes"
-	lazyFoxJSON = `"i can be such a lazy summer fox sometimes"`
 	lazyFox64   = "ImkgY2FuIGJlIHN1Y2ggYSBsYXp5IHN1bW1lciBmb3ggc29tZXRpbWVzIg"
+	lazyFoxJSON = `"i can be such a lazy summer fox sometimes"`
+	increment		  = "INCR"
+	testJSONIncrement = "test_json_increment"
+	testLocalSessions = "local_sessions_test"
+	testLocalSessionsBadAudChunk = "local_sessions_test_invalid_chunk"
+	testPerson		  = "test_person"
+	tmk3              = "tmk3"
 )
 
 var (
 	headerTest64 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+
+	jwtxParamsTest = CreateJWTParams{
+		Aud:      []string{testLocalSessions},
+		Iss:      tmk3,
+		Sub:      testPerson,
+		Lifetime: 3600,
+	}
+	tokenPayloadTest, errTokenPayloadTest = CreateJWT(&jwtxParamsTest, nil)
+	lateDelay = int64(60)
+	lateJwtxPayloadTest = CreateJWTParams{
+		Aud:      []string{testLocalSessions},
+		Delay: &lateDelay,
+		Iss:      tmk3,
+		Sub:      testPerson,
+		Lifetime: 3600,
+	}
+	lateTokenPayloadTest, errLateTokenPayloadTest = CreateJWT(&lateJwtxPayloadTest, nil)
+	expiredTokenPayloadTest = CreateJWTParams{
+		Aud:      []string{testLocalSessions},
+		Iss:      tmk3,
+		Sub:      testPerson,
+		Lifetime: 0,
+	}
+	expiredTokenPayload, errExpiredTokenPayload = CreateJWT(&expiredTokenPayloadTest, nil)
 )
 
 var (
@@ -368,5 +398,53 @@ func TestRetrieveTokenDetails(t *testing.T) {
 				tokenDetails.Claims.Sub,
 			),
 		)
+	}
+}
+
+func TestValidateTokenByWindowAndAud(t *testing.T) {
+	tokenIsValidWindow, errTokenPayload := ValidateTokenByWindowAndAud(tokenPayloadTest.Token, testLocalSessions, nil)
+	if !tokenIsValidWindow {
+		t.Fail()
+		t.Logf("token window is not valid")
+	}
+	if errTokenPayload != nil {
+		t.Fail()
+		t.Logf(errTokenPayload.Error())
+	}
+}
+
+func TestInvalidTokenWindowAndAud(t *testing.T) {
+	tokenIsValidWindow, errTokenPayload := ValidateTokenByWindowAndAud(lateTokenPayloadTest.Token, testLocalSessions, nil)
+	if tokenIsValidWindow {
+		t.Fail()
+		t.Logf("token window should not be valid")
+	}
+	if errTokenPayload == nil {
+		t.Fail()
+		t.Logf("there should be an error about the used before expected time")
+	}
+}
+
+func TestExpiredTokenWindowAndAud(t *testing.T) {
+	tokenIsValidWindow, errTokenPayload := ValidateTokenByWindowAndAud(expiredTokenPayload.Token, testLocalSessions, nil)
+	if tokenIsValidWindow {
+		t.Fail()
+		t.Logf("token window should be expired")
+	}
+	if errTokenPayload == nil {
+		t.Fail()
+		t.Logf("there should be an error about the used before expected time")
+	}
+}
+
+func TestInvalidTokenWindowAndInvalidAud(t *testing.T) {
+	tokenIsValidWindow, errTokenPayload := ValidateTokenByWindowAndAud(tokenPayloadTest.Token, testLocalSessionsBadAudChunk, nil)
+	if tokenIsValidWindow {
+		t.Fail()
+		t.Logf("token aud chunk is not valid but still passed")
+	}
+	if errTokenPayload == nil {
+		t.Fail()
+		t.Logf("there should be an associated error with an invalid aud chunk")
 	}
 }

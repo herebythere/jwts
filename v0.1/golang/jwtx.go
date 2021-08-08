@@ -62,18 +62,25 @@ var (
 		Typ: "JWT",
 	}
 	headerBase64, errHeaderBase64 = encodeToBase64(&headerDefaultParams)
-	errSourceIsNil                = errors.New("decoding source is nil")
-	errNilCreateParams            = errors.New("nil CreateJWTParams params")
-	errHeaderIsNil                = errors.New("header is nil")
-	errClaimsIsNil                = errors.New("claims is nil")
-	errSecretIsNil                = errors.New("secret is nil")
-	errTokenIsNil                 = errors.New("token is nil")
-	errInvalidToken               = errors.New("invalid token")
+
+	errSourceIsNil             = errors.New("decoding source is nil")
+	errNilCreateParams         = errors.New("nil CreateJWTParams params")
+	errHeaderIsNil             = errors.New("header is nil")
+	errClaimsIsNil             = errors.New("claims is nil")
+	errSecretIsNil             = errors.New("secret is nil")
+	errTokenIsNil              = errors.New("token is nil")
+	errInvalidToken            = errors.New("invalid token")
+	errTokenIsExpired          = errors.New("token is expired")
+	errTokenIssuedBeforeNow    = errors.New("token is issued before now")
+	errTokenUsedBeforeExpected = errors.New("token was used before expected time")
+	errAudChunkNotFound        = errors.New("audience chunk not found in token")
+	errNilTokenDetails         = errors.New("nil token details")
+	errTokenPayloadIsNil       = errors.New("token payload is nil")
 )
 
 func encodeToBase64(source interface{}) (*string, error) {
 	if source == nil {
-		return nil, errors.New("source is nil")
+		return nil, errSourceIsNil
 	}
 
 	marshaled, errMarshaled := json.Marshal(source)
@@ -223,6 +230,16 @@ func unmarshalClaims(claims *string, err error) (*Claims, error) {
 	return &claimsDetails, errClaimsMarshal
 }
 
+func findAudChunk(aud *[]string, audTarget string) bool {
+	for _, audChunk := range *aud {
+		if audChunk == audTarget {
+			return true
+		}
+	}
+
+	return false
+}
+
 func CreateJWT(params *CreateJWTParams, err error) (*TokenPayload, error) {
 	if err != nil {
 		return nil, err
@@ -269,7 +286,7 @@ func ValidateJWT(tokenPayload *TokenPayload, err error) (bool, error) {
 		return false, err
 	}
 	if tokenPayload == nil {
-		return false, errors.New("tokenPayload is nil")
+		return false, errTokenPayloadIsNil
 	}
 
 	chunks, errChunks := retrieveTokenChunks(tokenPayload.Token, nil)
@@ -284,7 +301,7 @@ func RetrieveTokenDetails(token *string, err error) (*TokenDetails, error) {
 		return nil, err
 	}
 	if token == nil {
-		return nil, errors.New("token is nil")
+		return nil, errTokenIsNil
 	}
 
 	chunks, errChunks := retrieveTokenChunks(token, nil)
@@ -299,4 +316,41 @@ func RetrieveTokenDetails(token *string, err error) (*TokenDetails, error) {
 	}
 
 	return &tokenDetails, errClaimsDetails
+}
+
+func ValidateTokenByWindowAndAud(token *string, audTarget string, err error) (bool, error) {
+	tokenDetails, errTokenDetails := RetrieveTokenDetails(token, err)
+	if errTokenDetails != nil {
+		return false, errTokenDetails
+	}
+	if tokenDetails == nil {
+		return false, errNilTokenDetails
+	}
+
+	// check if role exists
+	audChunkFound := findAudChunk(&tokenDetails.Claims.Aud, audTarget)
+	if !audChunkFound {
+		return false, errAudChunkNotFound
+	}
+
+	currentTime := time.Now().Unix()
+
+	issueDelta := tokenDetails.Claims.Iat - currentTime
+	if issueDelta > 0 {
+		return false, errTokenIssuedBeforeNow
+	}
+
+	if tokenDetails.Claims.Nbf != nil {
+		notBeforeDelta := *tokenDetails.Claims.Nbf - currentTime
+		if notBeforeDelta >= 0 {
+			return false, errTokenUsedBeforeExpected
+		}
+	}
+
+	lifetime := tokenDetails.Claims.Exp - currentTime
+	if lifetime > 0 {
+		return true, nil
+	}
+
+	return false, errTokenIsExpired
 }

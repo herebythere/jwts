@@ -131,6 +131,9 @@ func generateSignature(
 	secret *[]byte,
 	err error,
 ) (*string, error) {
+	if err != nil {
+		return nil, err
+	}
 	if header == nil {
 		return nil, errHeaderIsNil
 	}
@@ -139,9 +142,6 @@ func generateSignature(
 	}
 	if secret == nil {
 		return nil, errSecretIsNil
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	hmacSecret := hmac.New(sha256.New, *secret)

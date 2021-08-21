@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	lazyFox     = "i can be such a lazy summer fox sometimes"
-	lazyFox64   = "ImkgY2FuIGJlIHN1Y2ggYSBsYXp5IHN1bW1lciBmb3ggc29tZXRpbWVzIg"
-	lazyFoxJSON = `"i can be such a lazy summer fox sometimes"`
-	increment		  = "INCR"
-	testJSONIncrement = "test_json_increment"
-	testLocalSessions = "local_sessions_test"
+	lazyFox                      = "i can be such a lazy summer fox sometimes"
+	lazyFox64                    = "ImkgY2FuIGJlIHN1Y2ggYSBsYXp5IHN1bW1lciBmb3ggc29tZXRpbWVzIg"
+	lazyFoxJSON                  = `"i can be such a lazy summer fox sometimes"`
+	increment                    = "INCR"
+	testJSONIncrement            = "test_json_increment"
+	testLocalSessions            = "local_sessions_test"
 	testLocalSessionsBadAudChunk = "local_sessions_test_invalid_chunk"
-	testPerson		  = "test_person"
-	tmk3              = "tmk3"
+	testPerson                   = "test_person"
+	tmk3                         = "tmk3"
 )
 
 var (
@@ -28,16 +28,16 @@ var (
 		Lifetime: 3600,
 	}
 	tokenPayloadTest, errTokenPayloadTest = CreateJWT(&jwtxParamsTest, nil)
-	lateDelay = int64(60)
-	lateJwtxPayloadTest = CreateJWTParams{
+	lateDelay                             = int64(60)
+	lateJwtxPayloadTest                   = CreateJWTParams{
 		Aud:      []string{testLocalSessions},
-		Delay: &lateDelay,
+		Delay:    &lateDelay,
 		Iss:      tmk3,
 		Sub:      testPerson,
 		Lifetime: 3600,
 	}
 	lateTokenPayloadTest, errLateTokenPayloadTest = CreateJWT(&lateJwtxPayloadTest, nil)
-	expiredTokenPayloadTest = CreateJWTParams{
+	expiredTokenPayloadTest                       = CreateJWTParams{
 		Aud:      []string{testLocalSessions},
 		Iss:      tmk3,
 		Sub:      testPerson,

@@ -21,7 +21,7 @@ var (
 	testLocalSessionsBadAudChunk = "local_sessions_test_invalid_chunk"
 	headerTest64                 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
-	jwtxParamsTest = CreateJWTParams{
+	jwtxParamsTest = CreateTokenParams{
 		Aud:      []string{testLocalSessions},
 		Iss:      tmk3,
 		Sub:      testPerson,
@@ -31,7 +31,7 @@ var (
 	tokenSecretTest, errTokenSecret = generateRandomByteArray(128, nil)
 	tokenTest, errTokenTest         = CreateToken(&jwtxParamsTest, tokenSecretTest, nil)
 	lateDelay                       = int64(60)
-	latePayloadTest                 = CreateJWTParams{
+	latePayloadTest                 = CreateTokenParams{
 		Aud:      []string{testLocalSessions},
 		Delay:    &lateDelay,
 		Iss:      tmk3,
@@ -41,7 +41,7 @@ var (
 
 	lateTokenSecret, errLateTokenSecret = generateRandomByteArray(128, nil)
 	lateTokenTest, errLateTokenTest     = CreateToken(&latePayloadTest, lateTokenSecret, nil)
-	expiredTokenTest                    = CreateJWTParams{
+	expiredTokenTest                    = CreateTokenParams{
 		Aud:      []string{testLocalSessions},
 		Iss:      tmk3,
 		Sub:      testPerson,
@@ -53,7 +53,7 @@ var (
 )
 
 var (
-	testClaims = CreateJWTParams{
+	testClaims = CreateTokenParams{
 		Aud:      []string{"hello", "world"},
 		Iss:      "tmk3.com",
 		Sub:      "test_jwt",

@@ -11,17 +11,17 @@ import (
 	"time"
 )
 
-type Header struct {
-	Alg string `json:"alg"`
-	Typ string `json:"typ"`
-}
-
-type CreateJWTParams struct {
+type CreateTokenParams struct {
 	Aud      []string `json:"aud"`
 	Iss      string   `json:"iss"`
 	Sub      string   `json:"sub"`
 	Lifetime int64    `json:"lifetime"`
 	Delay    *int64   `json:"delay,omitempty"`
+}
+
+type Header struct {
+	Alg string `json:"alg"`
+	Typ string `json:"typ"`
 }
 
 type Claims struct {
@@ -55,13 +55,13 @@ var (
 	}
 	DefaultHeaderBase64, errHeaderBase64 = encodeJSONToBase64(&DefaultHeader)
 
-	errSourceIsNil     = errors.New("decoding source is nil")
-	errNilCreateParams = errors.New("nil CreateJWTParams params")
-	errHeaderIsNil     = errors.New("header is nil")
-	errClaimsIsNil     = errors.New("claims is nil")
-	errSecretIsNil     = errors.New("secret is nil")
-	errTokenIsNil      = errors.New("token is nil")
-	errInvalidToken    = errors.New("invalid token")
+	errSourceIsNil          = errors.New("decoding source is nil")
+	errNilCreateTokenParams = errors.New("nil CreateTokenParams params")
+	errHeaderIsNil          = errors.New("header is nil")
+	errClaimsIsNil          = errors.New("claims is nil")
+	errSecretIsNil          = errors.New("secret is nil")
+	errTokenIsNil           = errors.New("token is nil")
+	errInvalidToken         = errors.New("invalid token")
 )
 
 func encodeJSONToBase64(source interface{}) (*string, error) {
@@ -189,12 +189,12 @@ func validateTokenTimes(tokenDetails *TokenDetails, err error) (bool, error) {
 	return false, nil
 }
 
-func createClaims(params *CreateJWTParams, err error) (*string, error) {
+func createClaims(params *CreateTokenParams, err error) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
 	if params == nil {
-		return nil, errNilCreateParams
+		return nil, errNilCreateTokenParams
 	}
 
 	nowAsSecond := time.Now().Unix()
@@ -303,7 +303,7 @@ func validateSignature(
 }
 
 func CreateToken(
-	params *CreateJWTParams,
+	params *CreateTokenParams,
 	secret *[]byte,
 	err error,
 ) (

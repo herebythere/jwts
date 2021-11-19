@@ -8,6 +8,14 @@ Utility functions to create and digest JSON Web Tokens.
 ### Types
 
 ```
+CreateTokenParams {
+	aud      string[]
+	iss      string  
+	sub      string  
+	lifetime int64   
+	delay    ?int64
+}
+
 Header {
 	alg string
 	typ string
@@ -20,14 +28,6 @@ Claims {
 	iss string  
 	nbf ?int64
 	sub string  
-}
-
-CreateJWTParams {
-	aud      string[]
-	iss      string  
-	sub      string  
-	lifetime int64   
-	delay    ?int64
 }
 
 TokenChunks {
@@ -56,7 +56,7 @@ DefaultHeaderBase64: string
 
 ```
 CreateToken(
-	params CreateJWTParams,
+	params CreateTokenParams,
 	secret byte[],
 )->string
 

@@ -46,7 +46,10 @@ TokenDetails {
 ### Properties
 
 ```
-DefaultHeader: Header
+DefaultHeader = {
+	alg: "HS256",
+	typ: "JWT",
+}
 
 DefaultHeaderBase64: string
 ```
